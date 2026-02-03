@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { toast } from 'sonner';
 import {
   Stepper,
@@ -15,25 +16,36 @@ import {
   PaymentMethod,
 } from '@/features/payment';
 import { DonorForm, useDonorStore } from '@/features/donor';
-import { causes } from '@/mocks/causes';
 import logoSabanaNorte from '@/shared/assets/db28b6f2afc4257aa2f0341a5d2855a92eaf3105.png';
 import { formatCurrency } from '@/shared/lib/utils';
 
 export function HomePage() {
   // Donation store
   const {
+    causes,
+    causesLoading,
+    causesError,
     cart,
     currency,
     currentStep,
     activeTab,
+    loadCauses,
     addToCart,
     removeFromCart,
-    clearCart,
     setCurrency,
     setStep,
     setActiveTab,
+    getCauseById,
+    getFilteredCauses,
     reset: resetDonation,
   } = useDonationStore();
+
+  // Load causes on mount
+  useEffect(() => {
+    if (causes.length === 0 && !causesLoading) {
+      loadCauses();
+    }
+  }, [causes.length, causesLoading, loadCauses]);
 
   // Payment store
   const {
@@ -76,7 +88,7 @@ export function HomePage() {
     },
   ] as const;
 
-  const filteredCauses = causes.filter((cause) => cause.type === activeTab);
+  const filteredCauses = getFilteredCauses();
 
   const handleStepClick = (stepNumber: number) => {
     if (stepNumber <= currentStep) {
@@ -86,7 +98,7 @@ export function HomePage() {
   };
 
   const handleAddToCart = (causeId: string, amount: number, quantity: number) => {
-    const cause = causes.find((c) => c.id === causeId);
+    const cause = getCauseById(causeId);
     if (!cause) return;
 
     addToCart({
@@ -182,14 +194,33 @@ export function HomePage() {
                   </p>
                 </div>
 
-                <CategoryTabs activeTab={activeTab} onTabChange={setActiveTab} />
+                {causesLoading ? (
+                  <div className="flex items-center justify-center py-12">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#4E5BFF]"></div>
+                    <span className="ml-3 text-[#6B7280]">Cargando causas...</span>
+                  </div>
+                ) : causesError ? (
+                  <div className="text-center py-12">
+                    <p className="text-red-500 mb-4">{causesError}</p>
+                    <button
+                      onClick={() => loadCauses()}
+                      className="px-4 py-2 bg-[#4E5BFF] text-white rounded-lg hover:bg-[#3F46DB]"
+                    >
+                      Reintentar
+                    </button>
+                  </div>
+                ) : (
+                  <>
+                    <CategoryTabs activeTab={activeTab} onTabChange={setActiveTab} />
 
-                <DonationTypeContainer
-                  type={activeTab}
-                  causes={filteredCauses}
-                  onAdd={handleAddToCart}
-                  onCurrencyChange={setCurrency}
-                />
+                    <DonationTypeContainer
+                      type={activeTab}
+                      causes={filteredCauses}
+                      onAdd={handleAddToCart}
+                      onCurrencyChange={setCurrency}
+                    />
+                  </>
+                )}
               </div>
             )}
 
