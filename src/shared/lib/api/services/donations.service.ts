@@ -22,8 +22,12 @@ export const donationsService = {
    * Works for both authenticated users and guests
    */
   async create(data: CreateDonationRequest): Promise<CreateDonationResponse> {
+    // Ensure CSRF cookie is set before POST (required by Laravel Sanctum SPA)
+    await api.ensureCsrfCookie();
+    // Server returns CreateDonationResponse directly ({ data: Donation, payment })
+    // The ApiResponse wrapper in client.ts causes type mismatch - cast to actual type
     const response = await api.post<CreateDonationResponse>('/donations', data);
-    return response.data;
+    return response as unknown as CreateDonationResponse;
   },
 
   /**
@@ -67,5 +71,15 @@ export const donationsService = {
     // Open in new tab for PDF download
     window.open(url, '_blank');
     return url;
+  },
+
+  /**
+   * Check donation status by Wompi reference (public endpoint)
+   * Used for guest donations that need to poll for status updates
+   */
+  async getStatusByReference(wompiReference: string): Promise<{ status: string; wompi_reference: string }> {
+    const response = await api.get<{ status: string; wompi_reference: string }>(`/donations/status/${wompiReference}`);
+    // Backend returns { status, wompi_reference } directly
+    return response as unknown as { status: string; wompi_reference: string };
   },
 };

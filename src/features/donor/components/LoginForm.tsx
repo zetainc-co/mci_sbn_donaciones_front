@@ -1,18 +1,29 @@
-import { useState } from 'react';
-import { Mail, Lock, MessageSquare } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Mail, Lock, MessageSquare, Loader2 } from 'lucide-react';
 import { DonorInfo } from '../types';
+import { authService } from '@/shared/lib/api/services';
 import { toast } from 'sonner';
 
 interface LoginFormProps {
   onSubmit: (info: DonorInfo) => void;
+  isLoading?: boolean;
+  prefillEmail?: string;
 }
 
-export function LoginForm({ onSubmit }: LoginFormProps) {
+export function LoginForm({ onSubmit, isLoading, prefillEmail }: LoginFormProps) {
   const [formData, setFormData] = useState({
-    email: '',
+    email: prefillEmail || '',
     password: '',
     prayerRequest: '',
   });
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
+
+  // Update email when prefillEmail changes (e.g., when redirected from GuestForm)
+  useEffect(() => {
+    if (prefillEmail) {
+      setFormData(prev => ({ ...prev, email: prefillEmail }));
+    }
+  }, [prefillEmail]);
 
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -42,23 +53,42 @@ export function LoginForm({ onSubmit }: LoginFormProps) {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (validate()) {
-      // Simular login exitoso
-      toast.success('Inicio de sesión exitoso', {
-        description: 'Bienvenido de nuevo',
-      });
-      
-      // Simular datos de usuario autenticado
-      const donorInfo: DonorInfo = {
-        fullName: 'Usuario Demo',
+    if (!validate()) return;
+
+    setIsLoggingIn(true);
+    try {
+      const response = await authService.login({
         email: formData.email,
-        phone: '+57 300 123 4567',
-        country: 'Colombia',
+        password: formData.password,
+      });
+
+      const user = response.data;
+      const displayName = user.first_name || user.name || 'usuario';
+
+      toast.success('Inicio de sesion exitoso', {
+        description: `Bienvenido de nuevo, ${displayName}`,
+      });
+
+      const donorInfo: DonorInfo = {
+        fullName: user.full_name || user.name || formData.email,
+        email: user.email,
+        phone: user.phone || '',
+        documentType: (user.document_type as DonorInfo['documentType']) || 'CC',
+        documentNumber: user.document_number || '',
         acceptsTerms: true,
+        prayerRequest: formData.prayerRequest || undefined,
+        userId: user.id,
       };
       onSubmit(donorInfo);
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Credenciales invalidas';
+      toast.error('Error al iniciar sesion', {
+        description: errorMessage,
+      });
+    } finally {
+      setIsLoggingIn(false);
     }
   };
 
@@ -146,9 +176,22 @@ export function LoginForm({ onSubmit }: LoginFormProps) {
       {/* Submit Button */}
       <button
         type="submit"
-        className="w-full py-3.5 px-4 bg-[#4E5BFF] hover:bg-[#3F46DB] text-white rounded-[10px] font-semibold transition-all duration-200 shadow-md hover:shadow-lg mt-6"
+        disabled={isLoading || isLoggingIn}
+        className="w-full py-3.5 px-4 bg-[#4E5BFF] hover:bg-[#3F46DB] disabled:bg-[#9CA3AF] disabled:cursor-not-allowed text-white rounded-[10px] font-semibold transition-all duration-200 shadow-md hover:shadow-lg mt-6 flex items-center justify-center gap-2"
       >
-        Iniciar sesión y continuar
+        {isLoggingIn ? (
+          <>
+            <Loader2 className="w-5 h-5 animate-spin" />
+            Iniciando sesion...
+          </>
+        ) : isLoading ? (
+          <>
+            <Loader2 className="w-5 h-5 animate-spin" />
+            Procesando donacion...
+          </>
+        ) : (
+          'Iniciar sesion y continuar'
+        )}
       </button>
 
       {/* Sign Up Link */}

@@ -11,6 +11,10 @@ export { ConfirmationPanel } from './components/ConfirmationPanel';
 // Store
 export { useDonationStore } from './store';
 
+// Hooks
+export { useDonationProcessor } from './hooks/useDonationProcessor';
+export type { ProcessDonationParams, ProcessResult } from './hooks/useDonationProcessor';
+
 // Types
 export type {
   CauseType,

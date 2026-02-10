@@ -81,7 +81,7 @@ export const usePaymentStore = create<PaymentState>((set, get) => ({
         card_number: cardData.cardNumber.replace(/\s/g, ''),
         card_holder: cardData.cardHolder,
         expiry_month: expiryMonth,
-        expiry_year: `20${expiryYear}`,
+        expiry_year: expiryYear,
         cvv: cardData.cvv,
       });
 
@@ -123,9 +123,9 @@ export const usePaymentStore = create<PaymentState>((set, get) => ({
           donation_id: donationId,
           payment_method: 'PSE',
           pse_data: {
-            bank_code: pseData.bank,
-            person_type: pseData.documentType === 'NATURAL' ? 'NATURAL' : 'JURIDICA',
-            document_type: 'CC',
+            bank_code: pseData.bankCode,
+            person_type: pseData.personType,
+            document_type: pseData.documentType,
             document_number: pseData.documentNumber,
           },
         });

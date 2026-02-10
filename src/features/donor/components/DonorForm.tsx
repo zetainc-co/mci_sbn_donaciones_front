@@ -7,12 +7,19 @@ import { LoginForm } from './LoginForm';
 
 interface DonorFormProps {
   onSubmit: (info: DonorInfo) => void;
+  isLoading?: boolean;
 }
 
-type DonorTab = 'guest' | 'register' | 'login';
+export type DonorTab = 'guest' | 'register' | 'login';
 
-export function DonorForm({ onSubmit }: DonorFormProps) {
+export function DonorForm({ onSubmit, isLoading }: DonorFormProps) {
   const [activeTab, setActiveTab] = useState<DonorTab>('guest');
+  const [prefillEmail, setPrefillEmail] = useState<string>('');
+
+  const handleSwitchToLogin = (email: string) => {
+    setPrefillEmail(email);
+    setActiveTab('login');
+  };
 
   const tabs = [
     {
@@ -63,9 +70,26 @@ export function DonorForm({ onSubmit }: DonorFormProps) {
 
       {/* Tab Content */}
       <div>
-        {activeTab === 'guest' && <GuestForm onSubmit={onSubmit} />}
-        {activeTab === 'register' && <RegisterForm onSubmit={onSubmit} />}
-        {activeTab === 'login' && <LoginForm onSubmit={onSubmit} />}
+        {activeTab === 'guest' && (
+          <GuestForm
+            onSubmit={onSubmit}
+            isLoading={isLoading}
+          />
+        )}
+        {activeTab === 'register' && (
+          <RegisterForm
+            onSubmit={onSubmit}
+            isLoading={isLoading}
+            onSwitchToLogin={handleSwitchToLogin}
+          />
+        )}
+        {activeTab === 'login' && (
+          <LoginForm
+            onSubmit={onSubmit}
+            isLoading={isLoading}
+            prefillEmail={prefillEmail}
+          />
+        )}
       </div>
     </div>
   );

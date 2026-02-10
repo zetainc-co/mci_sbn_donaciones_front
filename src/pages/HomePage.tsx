@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import {
   Stepper,
@@ -7,6 +7,8 @@ import {
   CartPanel,
   ConfirmationPanel,
   useDonationStore,
+  useDonationProcessor,
+  type ProcessResult,
 } from '@/features/donation';
 import {
   PaymentMethodCard,
@@ -15,7 +17,7 @@ import {
   usePaymentStore,
   PaymentMethod,
 } from '@/features/payment';
-import { DonorForm, useDonorStore } from '@/features/donor';
+import { DonorForm, useDonorStore, type DonorInfo } from '@/features/donor';
 import logoSabanaNorte from '@/shared/assets/db28b6f2afc4257aa2f0341a5d2855a92eaf3105.png';
 import { formatCurrency } from '@/shared/lib/utils';
 
@@ -50,9 +52,24 @@ export function HomePage() {
   // Payment store
   const {
     selectedMethod,
+    cardData,
+    pseData,
     selectMethod,
+    setCardData,
     reset: resetPayment,
   } = usePaymentStore();
+
+  // Donation processor
+  const {
+    processDonation,
+    isProcessing,
+    error: processingError,
+    result: donationResult,
+    reset: resetProcessor,
+  } = useDonationProcessor();
+
+  // Processing state for UI
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Donor store
   const {
@@ -137,24 +154,82 @@ export function HomePage() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const handleDonorInfoSubmit = (info: typeof donorInfo) => {
-    if (info) {
-      setDonorInfo(info);
-      setStep(4);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+  const handleDonorInfoSubmit = async (info: DonorInfo) => {
+    if (!info || !selectedMethod) return;
+
+    setDonorInfo(info);
+    setIsSubmitting(true);
+
+    try {
+      const result = await processDonation({
+        cart,
+        currency,
+        paymentMethod: selectedMethod,
+        donorInfo: info,
+        cardData,
+        pseData,
+        prayerRequest: info.prayerRequest,
+      });
+
+      // For PSE, show confirmation then redirect to bank
+      if (result.type === 'pse') {
+        setStep(4);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+
+        if (result.redirectUrl) {
+          toast.info('Redirigiendo al banco...', {
+            description: 'Serás redirigido para completar el pago',
+          });
+          // Redirect after brief delay to show confirmation
+          setTimeout(() => {
+            window.location.href = result.redirectUrl!;
+          }, 2000);
+        }
+        return;
+      }
+
+      // For card payments, check result
+      if (result.status === 'APPROVED' || result.status === 'PENDING' || result.status === 'PROCESSING') {
+        if (result.status === 'PENDING') {
+          toast.info('Pago en proceso', {
+            description: 'Tu pago está siendo procesado. Te notificaremos cuando se complete.',
+          });
+        }
+        setStep(4);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } else {
+        toast.error('Pago rechazado', {
+          description: result.payment?.message || 'Tu pago no fue aprobado. Por favor intenta con otro método.',
+        });
+      }
+    } catch (err) {
+      const message = (err as { message?: string })?.message || 'Error al procesar la donación';
+      toast.error('Error', { description: message });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
-  const handleDownloadReceipt = () => {
+  const handleDownloadReceipt = async () => {
+    if (!donationResult?.donation.data.id) {
+      toast.error('No se encontró la donación');
+      return;
+    }
+
     toast.success('Descargando comprobante...', {
       description: 'Tu comprobante se está generando',
     });
+
+    // The download is handled by the service opening a new tab
+    const { donationsService } = await import('@/shared/lib/api');
+    await donationsService.downloadReceipt(donationResult.donation.data.id);
   };
 
   const handleFinish = () => {
     resetDonation();
     resetPayment();
     resetDonor();
+    resetProcessor();
     toast.success('¡Gracias por tu donación!', {
       description: 'Esperamos verte pronto',
     });
@@ -251,7 +326,7 @@ export function HomePage() {
                     </div>
 
                     {/* Payment Method Forms */}
-                    {selectedMethod === 'CREDIT_CARD' && <CreditCardForm />}
+                    {selectedMethod === 'CREDIT_CARD' && <CreditCardForm onDataChange={setCardData} />}
                     {selectedMethod === 'PSE' && <PSEForm />}
 
                     <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mt-6">
@@ -282,7 +357,7 @@ export function HomePage() {
                   </p>
                 </div>
 
-                <DonorForm onSubmit={handleDonorInfoSubmit} />
+                <DonorForm onSubmit={handleDonorInfoSubmit} isLoading={isSubmitting || isProcessing} />
 
                 <button
                   onClick={() => setStep(2)}
@@ -300,6 +375,7 @@ export function HomePage() {
                   items={cart}
                   donorInfo={donorInfo}
                   paymentMethod={selectedMethod}
+                  donationResult={donationResult}
                   onDownload={handleDownloadReceipt}
                   onFinish={handleFinish}
                 />

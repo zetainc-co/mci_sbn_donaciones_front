@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { CreditCard, Calendar, Lock } from 'lucide-react';
 import { CardData } from '../types';
 
@@ -6,16 +7,22 @@ interface CreditCardFormProps {
 }
 
 export function CreditCardForm({ onDataChange }: CreditCardFormProps) {
-  const handleChange = (field: keyof CardData, value: string) => {
+  const [formData, setFormData] = useState<CardData>({
+    cardNumber: '',
+    cardHolder: '',
+    expiryDate: '',
+    cvv: '',
+  });
+
+  // Notify parent when form data changes
+  useEffect(() => {
     if (onDataChange) {
-      onDataChange({
-        cardNumber: '',
-        cardHolder: '',
-        expiryDate: '',
-        cvv: '',
-        [field]: value,
-      });
+      onDataChange(formData);
     }
+  }, [formData, onDataChange]);
+
+  const handleChange = (field: keyof CardData, value: string) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
   const formatCardNumber = (value: string) => {
@@ -64,6 +71,7 @@ export function CreditCardForm({ onDataChange }: CreditCardFormProps) {
           type="text"
           id="cardholderName"
           placeholder="Como aparece en la tarjeta"
+          value={formData.cardHolder}
           className="w-full px-4 py-3 bg-white border border-[#E5E7EB] rounded-[10px] text-sm text-[#111827] placeholder:text-[#D1D5DB] focus:outline-none focus:ring-2 focus:ring-[#4E5BFF]/20 focus:border-[#4E5BFF] transition-all duration-200"
           onChange={(e) => handleChange('cardHolder', e.target.value)}
         />
@@ -86,10 +94,11 @@ export function CreditCardForm({ onDataChange }: CreditCardFormProps) {
             id="cardNumber"
             placeholder="1234 5678 9012 3456"
             maxLength={19}
+            value={formData.cardNumber}
             className="w-full pl-12 pr-4 py-3 bg-white border border-[#E5E7EB] rounded-[10px] text-sm text-[#111827] placeholder:text-[#D1D5DB] focus:outline-none focus:ring-2 focus:ring-[#4E5BFF]/20 focus:border-[#4E5BFF] transition-all duration-200"
             onChange={(e) => {
-              e.target.value = formatCardNumber(e.target.value);
-              handleChange('cardNumber', e.target.value);
+              const formatted = formatCardNumber(e.target.value);
+              handleChange('cardNumber', formatted);
             }}
           />
         </div>
@@ -114,10 +123,11 @@ export function CreditCardForm({ onDataChange }: CreditCardFormProps) {
               id="expirationDate"
               placeholder="MM/AA"
               maxLength={5}
+              value={formData.expiryDate}
               className="w-full pl-10 sm:pl-12 pr-3 sm:pr-4 py-3 bg-white border border-[#E5E7EB] rounded-[10px] text-sm text-[#111827] placeholder:text-[#D1D5DB] focus:outline-none focus:ring-2 focus:ring-[#4E5BFF]/20 focus:border-[#4E5BFF] transition-all duration-200"
               onChange={(e) => {
-                e.target.value = formatExpirationDate(e.target.value);
-                handleChange('expiryDate', e.target.value);
+                const formatted = formatExpirationDate(e.target.value);
+                handleChange('expiryDate', formatted);
               }}
             />
           </div>
@@ -140,10 +150,11 @@ export function CreditCardForm({ onDataChange }: CreditCardFormProps) {
               id="cvv"
               placeholder="123"
               maxLength={4}
+              value={formData.cvv}
               className="w-full pl-10 sm:pl-12 pr-3 sm:pr-4 py-3 bg-white border border-[#E5E7EB] rounded-[10px] text-sm text-[#111827] placeholder:text-[#D1D5DB] focus:outline-none focus:ring-2 focus:ring-[#4E5BFF]/20 focus:border-[#4E5BFF] transition-all duration-200"
               onChange={(e) => {
-                e.target.value = e.target.value.replace(/[^0-9]/g, '');
-                handleChange('cvv', e.target.value);
+                const cleaned = e.target.value.replace(/[^0-9]/g, '');
+                handleChange('cvv', cleaned);
               }}
             />
           </div>

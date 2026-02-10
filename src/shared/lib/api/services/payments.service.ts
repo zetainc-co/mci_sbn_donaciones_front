@@ -16,7 +16,8 @@ export const paymentsService = {
    */
   async tokenizeCard(data: TokenizeCardRequest): Promise<TokenizeCardResponse> {
     const response = await api.post<TokenizeCardResponse>('/payments/card/tokenize', data);
-    return response.data;
+    // Backend returns { token, brand, last_four } directly without data wrapper
+    return response as unknown as TokenizeCardResponse;
   },
 
   /**
@@ -26,7 +27,8 @@ export const paymentsService = {
    */
   async processPayment(data: ProcessPaymentRequest): Promise<ProcessPaymentResponse> {
     const response = await api.post<ProcessPaymentResponse>('/payments/process', data);
-    return response.data;
+    // Backend returns { status, donation_id, message, ... } directly without data wrapper
+    return response as unknown as ProcessPaymentResponse;
   },
 
   /**

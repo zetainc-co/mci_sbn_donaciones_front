@@ -1,38 +1,40 @@
-import { Building2, User, ChevronDown } from 'lucide-react';
-import { PSEData } from '../types';
+import { useEffect, useState } from 'react';
+import { Building2, User, FileText, CreditCard, ChevronDown } from 'lucide-react';
+import { PSEData, PersonType, DocumentType } from '../types';
+import { usePaymentStore } from '../store';
 
-interface PSEFormProps {
-  onDataChange?: (data: PSEData) => void;
-}
-
-const colombianBanks = [
-  { value: '', label: 'Selecciona tu banco' },
-  { value: 'bancolombia', label: 'Bancolombia' },
-  { value: 'banco_bogota', label: 'Banco de Bogotá' },
-  { value: 'banco_popular', label: 'Banco Popular' },
-  { value: 'bbva', label: 'BBVA Colombia' },
-  { value: 'davivienda', label: 'Davivienda' },
-  { value: 'banco_occidente', label: 'Banco de Occidente' },
-  { value: 'banco_av_villas', label: 'Banco AV Villas' },
-  { value: 'banco_caja_social', label: 'Banco Caja Social' },
-  { value: 'citibank', label: 'Citibank' },
-  { value: 'colpatria', label: 'Scotiabank Colpatria' },
-  { value: 'banco_gnb_sudameris', label: 'Banco GNB Sudameris' },
-  { value: 'banco_agrario', label: 'Banco Agrario' },
-  { value: 'banco_cooperativo', label: 'Banco Cooperativo Coopcentral' },
-  { value: 'banco_pichincha', label: 'Banco Pichincha' },
-  { value: 'bancoomeva', label: 'Bancoomeva' },
-  { value: 'banco_falabella', label: 'Banco Falabella' },
-  { value: 'banco_finandina', label: 'Banco Finandina' },
-  { value: 'nequi', label: 'Nequi' },
-  { value: 'daviplata', label: 'DaviPlata' },
+const documentTypes = [
+  { value: 'CC', label: 'Cédula de Ciudadanía' },
+  { value: 'CE', label: 'Cédula de Extranjería' },
+  { value: 'TI', label: 'Tarjeta de Identidad' },
+  { value: 'PAS', label: 'Pasaporte' },
+  { value: 'NIT', label: 'NIT' },
 ];
 
-export function PSEForm({ onDataChange }: PSEFormProps) {
-  const handleChange = (field: keyof PSEData, value: string) => {
-    if (onDataChange) {
-      onDataChange({ bank: '', documentType: '', documentNumber: '', [field]: value });
+export function PSEForm() {
+  const { pseBanks, pseBanksLoading, loadPSEBanks, setPSEData } = usePaymentStore();
+
+  const [formData, setFormData] = useState<PSEData>({
+    bankCode: '',
+    personType: 'NATURAL',
+    documentType: 'CC',
+    documentNumber: '',
+  });
+
+  // Load banks on mount
+  useEffect(() => {
+    loadPSEBanks();
+  }, [loadPSEBanks]);
+
+  // Update store when form data changes
+  useEffect(() => {
+    if (formData.bankCode && formData.documentNumber) {
+      setPSEData(formData);
     }
+  }, [formData, setPSEData]);
+
+  const handleChange = <K extends keyof PSEData>(field: K, value: PSEData[K]) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
   return (
@@ -47,17 +49,23 @@ export function PSEForm({ onDataChange }: PSEFormProps) {
       {/* Person Type */}
       <div>
         <label className="text-sm font-medium text-[#374151] mb-3 block">
-          Tipo de persona
+          Tipo de persona <span className="text-[#EF4444]">*</span>
         </label>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <button
             type="button"
-            onClick={() => handleChange('documentType', 'NATURAL')}
-            className="group p-4 bg-white border-2 border-[#E5E7EB] hover:border-[#4E5BFF] rounded-[10px] transition-all duration-200 text-left"
+            onClick={() => handleChange('personType', 'NATURAL')}
+            className={`group p-4 bg-white border-2 rounded-[10px] transition-all duration-200 text-left ${
+              formData.personType === 'NATURAL'
+                ? 'border-[#4E5BFF] bg-[#EEF0FF]'
+                : 'border-[#E5E7EB] hover:border-[#4E5BFF]'
+            }`}
           >
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-[#F6F7FB] group-hover:bg-[#EEF0FF] flex items-center justify-center transition-colors duration-200">
-                <User className="w-5 h-5 text-[#4E5BFF]" />
+              <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors duration-200 ${
+                formData.personType === 'NATURAL' ? 'bg-[#4E5BFF]' : 'bg-[#F6F7FB] group-hover:bg-[#EEF0FF]'
+              }`}>
+                <User className={`w-5 h-5 ${formData.personType === 'NATURAL' ? 'text-white' : 'text-[#4E5BFF]'}`} />
               </div>
               <div>
                 <p className="text-sm font-semibold text-[#111827]">Natural</p>
@@ -68,12 +76,18 @@ export function PSEForm({ onDataChange }: PSEFormProps) {
 
           <button
             type="button"
-            onClick={() => handleChange('documentType', 'JURIDICA')}
-            className="group p-4 bg-white border-2 border-[#E5E7EB] hover:border-[#4E5BFF] rounded-[10px] transition-all duration-200 text-left"
+            onClick={() => handleChange('personType', 'JURIDICA')}
+            className={`group p-4 bg-white border-2 rounded-[10px] transition-all duration-200 text-left ${
+              formData.personType === 'JURIDICA'
+                ? 'border-[#4E5BFF] bg-[#EEF0FF]'
+                : 'border-[#E5E7EB] hover:border-[#4E5BFF]'
+            }`}
           >
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-[#F6F7FB] group-hover:bg-[#EEF0FF] flex items-center justify-center transition-colors duration-200">
-                <Building2 className="w-5 h-5 text-[#4E5BFF]" />
+              <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors duration-200 ${
+                formData.personType === 'JURIDICA' ? 'bg-[#4E5BFF]' : 'bg-[#F6F7FB] group-hover:bg-[#EEF0FF]'
+              }`}>
+                <Building2 className={`w-5 h-5 ${formData.personType === 'JURIDICA' ? 'text-white' : 'text-[#4E5BFF]'}`} />
               </div>
               <div>
                 <p className="text-sm font-semibold text-[#111827]">Jurídica</p>
@@ -90,7 +104,7 @@ export function PSEForm({ onDataChange }: PSEFormProps) {
           htmlFor="bank"
           className="text-sm font-medium text-[#374151] mb-2 block"
         >
-          Selecciona tu banco
+          Selecciona tu banco <span className="text-[#EF4444]">*</span>
         </label>
         <div className="relative">
           <div className="absolute left-4 top-1/2 -translate-y-1/2 text-[#9CA3AF] pointer-events-none">
@@ -98,17 +112,73 @@ export function PSEForm({ onDataChange }: PSEFormProps) {
           </div>
           <select
             id="bank"
-            className="w-full appearance-none pl-12 pr-10 py-3 bg-white border border-[#E5E7EB] rounded-[10px] text-sm text-[#111827] cursor-pointer hover:border-[#4E5BFF] focus:outline-none focus:ring-2 focus:ring-[#4E5BFF]/20 focus:border-[#4E5BFF] transition-all duration-200"
-            onChange={(e) => handleChange('bank', e.target.value)}
-            defaultValue=""
+            value={formData.bankCode}
+            onChange={(e) => handleChange('bankCode', e.target.value)}
+            disabled={pseBanksLoading}
+            className="w-full appearance-none pl-12 pr-10 py-3 bg-white border border-[#E5E7EB] rounded-[10px] text-sm text-[#111827] cursor-pointer hover:border-[#4E5BFF] focus:outline-none focus:ring-2 focus:ring-[#4E5BFF]/20 focus:border-[#4E5BFF] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {colombianBanks.map((bank) => (
-              <option key={bank.value} value={bank.value} disabled={bank.value === ''}>
-                {bank.label}
+            <option value="">
+              {pseBanksLoading ? 'Cargando bancos...' : 'Selecciona tu banco'}
+            </option>
+            {pseBanks.map((bank, index) => (
+              <option key={`${bank.code}-${index}`} value={bank.code}>
+                {bank.name}
               </option>
             ))}
           </select>
           <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[#6B7280] pointer-events-none" />
+        </div>
+      </div>
+
+      {/* Document Type and Number */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label
+            htmlFor="pseDocumentType"
+            className="text-sm font-medium text-[#374151] mb-2 block"
+          >
+            Tipo de documento <span className="text-[#EF4444]">*</span>
+          </label>
+          <div className="relative">
+            <div className="absolute left-4 top-1/2 -translate-y-1/2 text-[#9CA3AF] pointer-events-none">
+              <FileText className="w-5 h-5" />
+            </div>
+            <select
+              id="pseDocumentType"
+              value={formData.documentType}
+              onChange={(e) => handleChange('documentType', e.target.value as DocumentType)}
+              className="w-full appearance-none pl-12 pr-10 py-3 bg-white border border-[#E5E7EB] rounded-[10px] text-sm text-[#111827] cursor-pointer hover:border-[#4E5BFF] focus:outline-none focus:ring-2 focus:ring-[#4E5BFF]/20 focus:border-[#4E5BFF] transition-all duration-200"
+            >
+              {documentTypes.map((doc) => (
+                <option key={doc.value} value={doc.value}>
+                  {doc.label}
+                </option>
+              ))}
+            </select>
+            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[#6B7280] pointer-events-none" />
+          </div>
+        </div>
+
+        <div>
+          <label
+            htmlFor="pseDocumentNumber"
+            className="text-sm font-medium text-[#374151] mb-2 block"
+          >
+            Número de documento <span className="text-[#EF4444]">*</span>
+          </label>
+          <div className="relative">
+            <div className="absolute left-4 top-1/2 -translate-y-1/2 text-[#9CA3AF]">
+              <CreditCard className="w-5 h-5" />
+            </div>
+            <input
+              type="text"
+              id="pseDocumentNumber"
+              placeholder="123456789"
+              value={formData.documentNumber}
+              onChange={(e) => handleChange('documentNumber', e.target.value)}
+              className="w-full pl-12 pr-4 py-3 bg-white border border-[#E5E7EB] rounded-[10px] text-sm text-[#111827] placeholder:text-[#D1D5DB] focus:outline-none focus:ring-2 focus:ring-[#4E5BFF]/20 focus:border-[#4E5BFF] transition-all duration-200"
+            />
+          </div>
         </div>
       </div>
 

@@ -1,0 +1,57 @@
+2026-02-03T15:22:32.790Z [INFO]: # Build environment configured with Standard build compute type: 8GiB Memory, 4vCPUs, 128GB Disk Space
+2026-02-03T15:22:33.247Z [INFO]: # Cloning repository: git@github.com:zetainc-co/mci_sbn_donaciones_front.git
+2026-02-03T15:22:33.788Z [INFO]: 
+2026-02-03T15:22:33.788Z [INFO]: Cloning into 'mci_sbn_donaciones_front'...
+2026-02-03T15:22:33.788Z [INFO]: # Checking for Git submodules at: /codebuild/output/src1887027781/src/mci_sbn_donaciones_front/.gitmodules
+2026-02-03T15:22:33.795Z [INFO]: # Retrieving environment cache...
+2026-02-03T15:22:33.892Z [WARNING]: ! Unable to write cache: {"code":"ERR_BAD_REQUEST","message":"Request failed with status code 404"})}
+2026-02-03T15:22:33.892Z [INFO]: ---- Setting Up SSM Secrets ----
+2026-02-03T15:22:33.892Z [INFO]: SSM params {"Path":"/amplify/dadh0oa03ho05/main/","WithDecryption":true}
+2026-02-03T15:22:33.934Z [WARNING]: !Failed to set up process.env.secrets
+2026-02-03T15:22:34.343Z [INFO]: # No package override configuration found.
+2026-02-03T15:22:34.346Z [INFO]: # Retrieving cache...
+2026-02-03T15:22:34.426Z [INFO]: # Retrieved cache
+2026-02-03T15:22:39.461Z [INFO]: ## Starting Backend Build
+                                 ## Checking for associated backend environment...
+                                 ## No backend environment association found, continuing...
+                                 ## Completed Backend Build
+2026-02-03T15:22:39.466Z [INFO]: {"backendDuration": 0}
+                                 ## Starting Frontend Build
+                                 # Starting phase: preBuild
+                                 # Executing command: npm ci --cache .npm --prefer-offline
+2026-02-03T15:22:59.046Z [INFO]: added 173 packages, and audited 174 packages in 15s
+                                 11 packages are looking for funding
+2026-02-03T15:22:59.051Z [INFO]: run `npm fund` for details
+2026-02-03T15:22:59.070Z [INFO]: 5 vulnerabilities (2 moderate, 3 high)
+                                 To address issues that do not require attention, run:
+                                 npm audit fix
+                                 To address all issues, run:
+                                 npm audit fix --force
+                                 Run `npm audit` for details.
+2026-02-03T15:22:59.083Z [INFO]: # Completed phase: preBuild
+                                 # Starting phase: build
+                                 # Executing command: npm run build
+2026-02-03T15:22:59.236Z [INFO]: > Multi-Step Donation System Prototype@0.1.0 build
+                                 > vite build
+2026-02-03T15:22:59.902Z [INFO]: vite v6.3.5 building for production...
+2026-02-03T15:22:59.957Z [INFO]: transforming...
+2026-02-03T15:23:01.572Z [INFO]: ✓ 1645 modules transformed.
+2026-02-03T15:23:01.722Z [INFO]: rendering chunks...
+2026-02-03T15:23:01.732Z [INFO]: computing gzip size...
+2026-02-03T15:23:01.811Z [INFO]: build/index.html                   0.45 kB │ gzip:  0.29 kB
+2026-02-03T15:23:01.811Z [INFO]: build/assets/index-BQRawSQ1.css   26.84 kB │ gzip:  5.51 kB
+                                 build/assets/index-C5uLhsym.js   331.68 kB │ gzip: 96.64 kB
+                                 ✓ built in 1.89s
+2026-02-03T15:23:01.847Z [INFO]: # Completed phase: build
+                                 ## Completed Frontend Build
+2026-02-03T15:23:01.857Z [INFO]: ## Build completed successfully
+2026-02-03T15:23:01.858Z [INFO]: # Starting caching...
+2026-02-03T15:23:01.860Z [INFO]: # Creating cache artifact...
+2026-02-03T15:23:02.130Z [INFO]: # Created cache artifact
+2026-02-03T15:23:02.130Z [INFO]: # Uploading cache artifact...
+2026-02-03T15:23:02.757Z [INFO]: # Uploaded cache artifact
+2026-02-03T15:23:02.927Z [INFO]: # Caching completed
+2026-02-03T15:23:02.936Z [ERROR]: !!! CustomerError: Artifact directory doesn't exist: dist
+2026-02-03T15:23:02.937Z [INFO]: # Starting environment caching...
+2026-02-03T15:23:02.937Z [INFO]: # Environment caching completed
+

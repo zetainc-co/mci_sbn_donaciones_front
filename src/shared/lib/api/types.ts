@@ -19,10 +19,21 @@ export type PersonType = 'NATURAL' | 'JURIDICA';
 // ============================================================================
 
 export interface User {
-  id: string;
+  id: number;
   email: string;
-  name: string;
+  name?: string;
+  first_name?: string;
+  last_name?: string;
+  full_name?: string;
+  phone?: string;
+  phone_masked?: string;
+  document_type?: DocumentType;
+  document_number?: string;
+  document_number_masked?: string;
+  source?: string;
   email_verified?: boolean;
+  verified?: boolean;
+  created_at?: string;
 }
 
 export interface RegisterRequest {
@@ -76,6 +87,7 @@ export interface GuestInfo {
   phone?: string;
   document_type: DocumentType;
   document_number: string;
+  user_id?: number; // Associate guest donation with existing user (from lookup)
 }
 
 export interface CreateDonationRequest {

@@ -6,8 +6,11 @@
  * - Production: Configure in Amplify Environment Variables
  */
 
-const BASE_URL =
-  import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api';
+// Use relative paths in development (Vite proxy handles routing)
+// In production, use the configured API URL
+const BASE_URL = import.meta.env.DEV
+  ? '/api'
+  : (import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api');
 
 type RequestOptions = {
   headers?: Record<string, string>;
@@ -59,6 +62,26 @@ class ApiClient {
     return this.baseUrl;
   }
 
+  /**
+   * Get XSRF token from cookies
+   */
+  private getXsrfToken(): string | null {
+    const match = document.cookie.match(/XSRF-TOKEN=([^;]+)/);
+    return match ? decodeURIComponent(match[1]) : null;
+  }
+
+  /**
+   * Ensure CSRF cookie is set before making state-changing requests
+   */
+  async ensureCsrfCookie(): Promise<void> {
+    // In development, use relative path (Vite proxy)
+    // In production, use the full URL
+    const csrfUrl = import.meta.env.DEV
+      ? '/sanctum/csrf-cookie'
+      : this.baseUrl.replace('/api', '') + '/sanctum/csrf-cookie';
+    await fetch(csrfUrl, { credentials: 'include' });
+  }
+
   private async request<T>(
     method: string,
     endpoint: string,
@@ -66,11 +89,14 @@ class ApiClient {
     options?: RequestOptions
   ): Promise<ApiResponse<T>> {
     const url = `${this.baseUrl}${endpoint}`;
+    const xsrfToken = this.getXsrfToken();
 
     const config: RequestInit = {
       method,
+      credentials: 'include',
       headers: {
         ...this.defaultHeaders,
+        ...(xsrfToken && { 'X-XSRF-TOKEN': xsrfToken }),
         ...options?.headers,
       },
     };

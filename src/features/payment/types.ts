@@ -1,4 +1,6 @@
 export type PaymentMethod = 'CREDIT_CARD' | 'DEBIT_CARD' | 'PSE' | 'NEQUI' | 'DAVIPLATA';
+export type PersonType = 'NATURAL' | 'JURIDICA';
+export type DocumentType = 'CC' | 'CE' | 'TI' | 'PAS' | 'NIT';
 
 export interface CardData {
   cardNumber: string;
@@ -8,7 +10,8 @@ export interface CardData {
 }
 
 export interface PSEData {
-  bank: string;
-  documentType: string;
+  bankCode: string;
+  personType: PersonType;
+  documentType: DocumentType;
   documentNumber: string;
 }
