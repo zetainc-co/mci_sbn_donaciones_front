@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import {
   Stepper,
@@ -18,10 +19,21 @@ import {
   PaymentMethod,
 } from '@/features/payment';
 import { DonorForm, useDonorStore, type DonorInfo } from '@/features/donor';
+import { donationsService } from '@/shared/lib/api';
 import logoSabanaNorte from '@/shared/assets/db28b6f2afc4257aa2f0341a5d2855a92eaf3105.png';
 import { formatCurrency } from '@/shared/lib/utils';
 
 export function HomePage() {
+  // Callback handling for redirect payments (Bancolombia, PSE)
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [callbackData, setCallbackData] = useState<{
+    donorInfo: DonorInfo;
+    paymentMethod: PaymentMethod;
+    items: { id: string; causeId: string; causeName: string; type: 'MOTIVE' | 'PROJECT' | 'EVENT'; amount: number; quantity: number }[];
+    result: ProcessResult;
+  } | null>(null);
+  const [isLoadingCallback, setIsLoadingCallback] = useState(false);
+
   // Donation store
   const {
     causes,
@@ -49,6 +61,95 @@ export function HomePage() {
     }
   }, [causes.length, causesLoading, loadCauses]);
 
+  // Handle payment callback (Bancolombia, PSE redirects)
+  useEffect(() => {
+    const donationId = searchParams.get('donation');
+    if (!donationId || callbackData || isLoadingCallback) return;
+
+    const loadCallbackData = async () => {
+      setIsLoadingCallback(true);
+      try {
+        const donation = await donationsService.getByIdForCallback(donationId);
+
+        // Map donation status to ProcessResult status
+        const statusMap: Record<string, 'APPROVED' | 'PENDING' | 'PROCESSING' | 'DECLINED'> = {
+          COMPLETED: 'APPROVED',
+          PENDING: 'PENDING',
+          PROCESSING: 'PROCESSING',
+          FAILED: 'DECLINED',
+          REFUNDED: 'DECLINED',
+        };
+
+        // Reconstruct data from donation
+        const reconstructedDonorInfo: DonorInfo = {
+          fullName: donation.donor?.full_name || '',
+          email: donation.donor?.email || '',
+          phone: '',
+          documentType: 'CC',
+          documentNumber: '',
+        };
+
+        const reconstructedItems = donation.items?.map((item, index) => ({
+          id: `callback-${index}`,
+          causeId: item.cause_id || '',
+          causeName: item.cause_name,
+          type: item.cause_type as 'MOTIVE' | 'PROJECT' | 'EVENT',
+          amount: item.amount,
+          quantity: item.quantity,
+        })) || [];
+
+        const reconstructedResult: ProcessResult = {
+          type: donation.payment_method === 'BANCOLOMBIA_BUTTON' ? 'bancolombia' :
+                donation.payment_method === 'PSE' ? 'pse' : 'card',
+          status: statusMap[donation.status] || 'PROCESSING',
+          donation: {
+            data: {
+              id: donation.id,
+              status: donation.status,
+              total_amount: donation.total_amount,
+              currency: donation.currency,
+              payment_method: donation.payment_method,
+              wompi_reference: donation.wompi_reference,
+              paid_at: donation.paid_at,
+              items: donation.items || [],
+              items_count: donation.items_count,
+              donor: donation.donor,
+              prayer_request: donation.prayer_request,
+              created_at: donation.created_at,
+            },
+          },
+          payment: {
+            status: statusMap[donation.status] || 'PROCESSING',
+            donation_id: donation.id,
+            wompi_transaction_id: donation.wompi_transaction_id,
+            message: '',
+          },
+        };
+
+        setCallbackData({
+          donorInfo: reconstructedDonorInfo,
+          paymentMethod: donation.payment_method as PaymentMethod,
+          items: reconstructedItems,
+          result: reconstructedResult,
+        });
+
+        // Set to step 4
+        setStep(4);
+
+        // Clear the URL params
+        setSearchParams({});
+
+      } catch (err) {
+        console.error('Error loading callback data:', err);
+        toast.error('Error al cargar los datos de la donación');
+      } finally {
+        setIsLoadingCallback(false);
+      }
+    };
+
+    loadCallbackData();
+  }, [searchParams, callbackData, isLoadingCallback, setStep, setSearchParams]);
+
   // Payment store
   const {
     selectedMethod,
@@ -70,6 +171,18 @@ export function HomePage() {
 
   // Processing state for UI
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Auto-scroll ref for payment forms
+  const paymentFormRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (selectedMethod && currentStep === 2 && paymentFormRef.current) {
+      const timer = setTimeout(() => {
+        paymentFormRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 200);
+      return () => clearTimeout(timer);
+    }
+  }, [selectedMethod, currentStep]);
 
   // Donor store
   const {
@@ -147,9 +260,42 @@ export function HomePage() {
 
   const handlePaymentMethodSelect = () => {
     if (!selectedMethod) {
-      toast.error('Por favor selecciona un método de pago');
+      toast.error('Por favor selecciona un método de donación');
       return;
     }
+
+    // Validate credit card fields
+    if (selectedMethod === 'CREDIT_CARD') {
+      if (!cardData?.cardHolder?.trim()) {
+        toast.error('Por favor ingresa el nombre del titular de la tarjeta');
+        return;
+      }
+      if (!cardData?.cardNumber || cardData.cardNumber.replace(/\s/g, '').length < 13) {
+        toast.error('Por favor ingresa un número de tarjeta válido');
+        return;
+      }
+      if (!cardData?.expiryDate || cardData.expiryDate.length < 5) {
+        toast.error('Por favor ingresa la fecha de expiración');
+        return;
+      }
+      if (!cardData?.cvv || cardData.cvv.length < 3) {
+        toast.error('Por favor ingresa el CVV');
+        return;
+      }
+    }
+
+    // Validate PSE fields
+    if (selectedMethod === 'PSE') {
+      if (!pseData?.bankCode) {
+        toast.error('Por favor selecciona un banco');
+        return;
+      }
+      if (!pseData?.documentNumber?.trim()) {
+        toast.error('Por favor ingresa tu número de documento');
+        return;
+      }
+    }
+
     setStep(3);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -171,14 +317,17 @@ export function HomePage() {
         prayerRequest: info.prayerRequest,
       });
 
-      // For PSE, show confirmation then redirect to bank
-      if (result.type === 'pse') {
+      // For PSE or Bancolombia, show confirmation then redirect
+      if (result.type === 'pse' || result.type === 'bancolombia') {
         setStep(4);
         window.scrollTo({ top: 0, behavior: 'smooth' });
 
         if (result.redirectUrl) {
-          toast.info('Redirigiendo al banco...', {
-            description: 'Serás redirigido para completar el pago',
+          const message = result.type === 'bancolombia'
+            ? 'Redirigiendo a Bancolombia...'
+            : 'Redirigiendo al banco...';
+          toast.info(message, {
+            description: 'Serás redirigido para completar la donación',
           });
           // Redirect after brief delay to show confirmation
           setTimeout(() => {
@@ -191,15 +340,15 @@ export function HomePage() {
       // For card payments, check result
       if (result.status === 'APPROVED' || result.status === 'PENDING' || result.status === 'PROCESSING') {
         if (result.status === 'PENDING') {
-          toast.info('Pago en proceso', {
-            description: 'Tu pago está siendo procesado. Te notificaremos cuando se complete.',
+          toast.info('Donación en proceso', {
+            description: 'Tu donación está siendo procesada. Te notificaremos cuando se complete.',
           });
         }
         setStep(4);
         window.scrollTo({ top: 0, behavior: 'smooth' });
       } else {
-        toast.error('Pago rechazado', {
-          description: result.payment?.message || 'Tu pago no fue aprobado. Por favor intenta con otro método.',
+        toast.error('Donación rechazada', {
+          description: result.payment?.message || 'Tu donación no fue aprobada. Por favor intenta con otro método.',
         });
       }
     } catch (err) {
@@ -211,7 +360,8 @@ export function HomePage() {
   };
 
   const handleDownloadReceipt = async () => {
-    if (!donationResult?.donation.data.id) {
+    const donationId = callbackData?.result.donation.data.id || donationResult?.donation.data.id;
+    if (!donationId) {
       toast.error('No se encontró la donación');
       return;
     }
@@ -222,10 +372,11 @@ export function HomePage() {
 
     // The download is handled by the service opening a new tab
     const { donationsService } = await import('@/shared/lib/api');
-    await donationsService.downloadReceipt(donationResult.donation.data.id);
+    await donationsService.downloadReceipt(donationId);
   };
 
   const handleFinish = () => {
+    setCallbackData(null);
     resetDonation();
     resetPayment();
     resetDonor();
@@ -237,7 +388,7 @@ export function HomePage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F6F7FB] py-8 pb-32 lg:pb-8">
+    <div className="min-h-screen bg-[#F6F7FB] py-8 pb-32 lg:pb-8 overflow-x-hidden">
       <div className="container mx-auto px-4 max-w-7xl">
         {/* Header */}
         <div className="mb-6 sm:mb-8">
@@ -302,8 +453,15 @@ export function HomePage() {
             {/* Step 2: Payment Method */}
             {currentStep === 2 &&
               (() => {
-                const availableMethods: PaymentMethod[] =
-                  currency === 'COP' ? ['CREDIT_CARD', 'PSE'] : ['CREDIT_CARD'];
+                // Order: 1. Credit/Debit Card, 2. Bancolombia Button (COP only), 3. PSE (disabled)
+                const availableMethods: { method: PaymentMethod; disabled?: boolean; disabledText?: string }[] =
+                  currency === 'COP'
+                    ? [
+                        { method: 'CREDIT_CARD' },
+                        { method: 'BANCOLOMBIA_BUTTON' },
+                        { method: 'PSE', disabled: true, disabledText: 'Próximamente' },
+                      ]
+                    : [{ method: 'CREDIT_CARD' }];
 
                 return (
                   <div className="bg-white rounded-[12px] border border-[#E5E7EB] p-4 sm:p-6 lg:p-8 shadow-[0px_4px_12px_rgba(0,0,0,0.06)]">
@@ -315,19 +473,28 @@ export function HomePage() {
                     </div>
 
                     <div className="space-y-3 mb-8">
-                      {availableMethods.map((method) => (
+                      {availableMethods.map(({ method, disabled, disabledText }) => (
                         <PaymentMethodCard
                           key={method}
                           method={method}
                           selected={selectedMethod === method}
                           onSelect={() => selectMethod(method)}
+                          disabled={disabled}
+                          disabledText={disabledText}
                         />
                       ))}
                     </div>
 
                     {/* Payment Method Forms */}
+                    <div ref={paymentFormRef}>
                     {selectedMethod === 'CREDIT_CARD' && <CreditCardForm onDataChange={setCardData} />}
                     {selectedMethod === 'PSE' && <PSEForm />}
+                    {selectedMethod === 'BANCOLOMBIA_BUTTON' && (
+                      <div className="bg-[#F6F7FB] rounded-lg p-4 text-sm text-[#6B7280]">
+                        <p>Serás redirigido a tu app de Bancolombia para completar la donación.</p>
+                      </div>
+                    )}
+                    </div>
 
                     <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mt-6">
                       <button
@@ -369,13 +536,21 @@ export function HomePage() {
             )}
 
             {/* Step 4: Confirmation */}
-            {currentStep === 4 && donorInfo && selectedMethod && (
+            {currentStep === 4 && isLoadingCallback && (
+              <div className="bg-white rounded-[12px] border border-[#E5E7EB] p-8 shadow-[0px_4px_12px_rgba(0,0,0,0.06)]">
+                <div className="flex flex-col items-center justify-center py-12">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#4E5BFF] mb-4"></div>
+                  <p className="text-[#6B7280]">Verificando tu donación...</p>
+                </div>
+              </div>
+            )}
+            {currentStep === 4 && !isLoadingCallback && (callbackData || (donorInfo && selectedMethod)) && (
               <div className="bg-white rounded-[12px] border border-[#E5E7EB] p-8 shadow-[0px_4px_12px_rgba(0,0,0,0.06)]">
                 <ConfirmationPanel
-                  items={cart}
-                  donorInfo={donorInfo}
-                  paymentMethod={selectedMethod}
-                  donationResult={donationResult}
+                  items={callbackData?.items || cart}
+                  donorInfo={callbackData?.donorInfo || donorInfo!}
+                  paymentMethod={callbackData?.paymentMethod || selectedMethod!}
+                  donationResult={callbackData?.result || donationResult}
                   onDownload={handleDownloadReceipt}
                   onFinish={handleFinish}
                 />

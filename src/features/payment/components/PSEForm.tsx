@@ -42,7 +42,7 @@ export function PSEForm() {
       <div className="mb-2">
         <h3 className="text-sm font-semibold text-[#111827]">Datos para PSE</h3>
         <p className="text-xs text-[#6B7280] mt-1">
-          Serás redirigido a tu banco para completar el pago
+          Serás redirigido a tu banco para completar la donación
         </p>
       </div>
 
@@ -186,7 +186,7 @@ export function PSEForm() {
       <div className="flex items-start gap-2 mt-4 p-3 bg-white rounded-[8px] border border-[#E5E7EB]">
         <Building2 className="w-4 h-4 text-[#4E5BFF] mt-0.5 flex-shrink-0" />
         <p className="text-xs text-[#6B7280]">
-          Serás redirigido al portal de tu banco para autorizar el pago de forma segura
+          Serás redirigido al portal de tu banco para autorizar la donación de forma segura
         </p>
       </div>
     </div>

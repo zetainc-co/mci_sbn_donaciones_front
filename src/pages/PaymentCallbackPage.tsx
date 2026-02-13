@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { CheckCircle2, Clock, XCircle, ArrowRight, RefreshCw } from 'lucide-react';
+import { CheckCircle2, Clock, XCircle, ArrowRight, RefreshCw, Download } from 'lucide-react';
 import { donationsService, type Donation } from '@/shared/lib/api';
 import logoSabanaNorte from '@/shared/assets/db28b6f2afc4257aa2f0341a5d2855a92eaf3105.png';
 
@@ -12,7 +12,7 @@ const statusConfig = {
     color: 'text-[#4E5BFF]',
     bgColor: 'bg-[#4E5BFF]/10',
     title: 'Verificando donación...',
-    description: 'Estamos confirmando el estado de tu donación con el banco.',
+    description: 'Estamos confirmando el estado de tu donación.',
   },
   success: {
     icon: CheckCircle2,
@@ -44,7 +44,7 @@ const statusConfig = {
   },
 };
 
-export function PSEReturnPage() {
+export function PaymentCallbackPage() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const [status, setStatus] = useState<PageStatus>('loading');
@@ -62,10 +62,9 @@ export function PSEReturnPage() {
       }
 
       try {
-        const donationData = await donationsService.getById(donationId);
+        const donationData = await donationsService.getByIdForCallback(donationId);
         setDonation(donationData);
 
-        // Map donation status to page status
         switch (donationData.status) {
           case 'COMPLETED':
             setStatus('success');
@@ -93,10 +92,10 @@ export function PSEReturnPage() {
   const config = statusConfig[status];
   const StatusIcon = config.icon;
 
-  const formatAmount = (value: number) => {
+  const formatAmount = (value: number, currency: string = 'COP') => {
     return new Intl.NumberFormat('es-CO', {
       style: 'currency',
-      currency: 'COP',
+      currency,
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
     }).format(value);
@@ -106,8 +105,10 @@ export function PSEReturnPage() {
     navigate('/');
   };
 
-  const handleRetry = () => {
-    navigate('/');
+  const handleDownloadReceipt = async () => {
+    if (donation?.id) {
+      await donationsService.downloadReceipt(donation.id);
+    }
   };
 
   return (
@@ -117,7 +118,7 @@ export function PSEReturnPage() {
         <div className="flex items-center gap-3 mb-8">
           <img src={logoSabanaNorte} alt="Sabana Norte" className="h-10 w-auto" />
           <div className="border-l border-[#E5E7EB] pl-3 ml-1">
-            <p className="text-sm text-[#6B7280]">Confirmación de donación PSE</p>
+            <p className="text-sm text-[#6B7280]">Confirmación de donación</p>
           </div>
         </div>
 
@@ -175,7 +176,9 @@ export function PSEReturnPage() {
                             <p className="text-xs text-[#6B7280]">Cantidad: {item.quantity}</p>
                           )}
                         </div>
-                        <p className="font-medium text-[#4E5BFF]">{formatAmount(item.subtotal)}</p>
+                        <p className="font-medium text-[#4E5BFF]">
+                          {formatAmount(item.subtotal, donation.currency)}
+                        </p>
                       </div>
                     ))}
                   </div>
@@ -187,7 +190,7 @@ export function PSEReturnPage() {
                 <div className="flex items-center justify-between">
                   <span className="font-medium text-[#6B7280]">Total</span>
                   <span className="text-2xl font-bold text-[#111827]">
-                    {formatAmount(donation.total_amount)}
+                    {formatAmount(donation.total_amount, donation.currency)}
                   </span>
                 </div>
               </div>
@@ -195,24 +198,25 @@ export function PSEReturnPage() {
           )}
 
           {/* Actions */}
-          <div className="flex gap-4">
-            {status === 'failed' || status === 'error' ? (
+          <div className="flex flex-col sm:flex-row gap-3">
+            {status === 'success' && donation && (
               <button
-                onClick={handleRetry}
-                className="w-full py-3.5 px-4 bg-[#4E5BFF] hover:bg-[#3F46DB] text-white rounded-[10px] font-semibold transition-all duration-200 shadow-md hover:shadow-lg flex items-center justify-center gap-2"
+                onClick={handleDownloadReceipt}
+                className="flex-1 py-3.5 px-4 bg-white border-2 border-[#E5E7EB] hover:border-[#4E5BFF] text-[#374151] rounded-[10px] font-medium transition-all duration-200 flex items-center justify-center gap-2"
               >
-                Intentar de nuevo
-                <ArrowRight className="w-5 h-5" />
+                <Download className="w-5 h-5" />
+                Descargar comprobante
               </button>
-            ) : status !== 'loading' ? (
+            )}
+            {status !== 'loading' && (
               <button
                 onClick={handleNewDonation}
-                className="w-full py-3.5 px-4 bg-[#4E5BFF] hover:bg-[#3F46DB] text-white rounded-[10px] font-semibold transition-all duration-200 shadow-md hover:shadow-lg flex items-center justify-center gap-2"
+                className="flex-1 py-3.5 px-4 bg-[#4E5BFF] hover:bg-[#3F46DB] text-white rounded-[10px] font-semibold transition-all duration-200 shadow-md hover:shadow-lg flex items-center justify-center gap-2"
               >
-                Hacer otra donación
+                {status === 'failed' || status === 'error' ? 'Intentar de nuevo' : 'Hacer otra donación'}
                 <ArrowRight className="w-5 h-5" />
               </button>
-            ) : null}
+            )}
           </div>
         </div>
 

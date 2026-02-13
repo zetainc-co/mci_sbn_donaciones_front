@@ -54,10 +54,19 @@ export const donationsService = {
   },
 
   /**
-   * Get a single donation by ID
+   * Get a single donation by ID (requires authentication)
    */
   async getById(donationId: string): Promise<Donation> {
     const response = await api.get<Donation>(`/donations/${donationId}`);
+    return response.data;
+  },
+
+  /**
+   * Get donation by ID for payment callback (public endpoint)
+   * Also updates status from Wompi if payment is still processing
+   */
+  async getByIdForCallback(donationId: string): Promise<Donation> {
+    const response = await api.get<Donation>(`/donations/callback/${donationId}`);
     return response.data;
   },
 

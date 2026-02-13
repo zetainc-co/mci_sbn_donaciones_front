@@ -80,4 +80,14 @@ export const paymentsService = {
       },
     });
   },
+
+  /**
+   * Helper: Process Bancolombia Button payment
+   */
+  async processBancolombiaPayment(donationId: string): Promise<ProcessPaymentResponse> {
+    return this.processPayment({
+      donation_id: donationId,
+      payment_method: 'BANCOLOMBIA_BUTTON',
+    });
+  },
 };

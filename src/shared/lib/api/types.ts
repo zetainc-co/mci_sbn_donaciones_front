@@ -9,7 +9,7 @@
 
 export type CauseType = 'MOTIVE' | 'PROJECT' | 'EVENT';
 export type Currency = 'COP' | 'USD';
-export type PaymentMethod = 'CREDIT_CARD' | 'DEBIT_CARD' | 'PSE';
+export type PaymentMethod = 'CREDIT_CARD' | 'DEBIT_CARD' | 'PSE' | 'BANCOLOMBIA_BUTTON';
 export type PaymentStatus = 'PENDING' | 'PROCESSING' | 'COMPLETED' | 'FAILED' | 'REFUNDED';
 export type DocumentType = 'CC' | 'CE' | 'TI' | 'PAS' | 'NIT';
 export type PersonType = 'NATURAL' | 'JURIDICA';

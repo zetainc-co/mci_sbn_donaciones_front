@@ -22,7 +22,7 @@ export interface ProcessDonationParams {
 }
 
 export interface ProcessResult {
-  type: 'card' | 'pse';
+  type: 'card' | 'pse' | 'bancolombia';
   status: 'APPROVED' | 'PENDING' | 'PROCESSING' | 'DECLINED';
   donation: CreateDonationResponse;
   payment: ProcessPaymentResponse;
@@ -126,6 +126,26 @@ export function useDonationProcessor() {
           setIsProcessing(false);
 
           // Redirect to bank for PSE
+          if (paymentResult.redirect_url) {
+            window.location.href = paymentResult.redirect_url;
+          }
+
+          return processResult;
+        } else if (paymentMethod === 'BANCOLOMBIA_BUTTON') {
+          paymentResult = await paymentsService.processBancolombiaPayment(donationId);
+
+          const processResult: ProcessResult = {
+            type: 'bancolombia',
+            status: paymentResult.status,
+            donation,
+            payment: paymentResult,
+            redirectUrl: paymentResult.redirect_url,
+          };
+
+          setResult(processResult);
+          setIsProcessing(false);
+
+          // Redirect to Bancolombia app
           if (paymentResult.redirect_url) {
             window.location.href = paymentResult.redirect_url;
           }

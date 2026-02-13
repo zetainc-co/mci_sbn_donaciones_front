@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Plus, Minus, Check } from 'lucide-react';
 import { Cause, CauseType, Currency } from '../types';
 import { PresetChip } from './PresetChip';
@@ -40,7 +40,17 @@ export function DonationTypeContainer({
   const [error, setError] = useState('');
   const [currency, setCurrency] = useState<Currency>('COP');
 
+  const amountConfigRef = useRef<HTMLDivElement>(null);
   const currentCause = causes.find((c) => c.id === selectedCause);
+
+  useEffect(() => {
+    if (selectedCause && amountConfigRef.current) {
+      const timer = setTimeout(() => {
+        amountConfigRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }, 150);
+      return () => clearTimeout(timer);
+    }
+  }, [selectedCause]);
 
   const formatAmount = (value: number) => {
     if (currency === 'USD') {
@@ -133,7 +143,7 @@ export function DonationTypeContainer({
         <label className="text-sm font-medium text-[#374151] mb-3 block">
           Selecciona una opción
         </label>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 overflow-hidden">
           {causes.map((cause) => (
             <button
               key={cause.id}
@@ -184,7 +194,7 @@ export function DonationTypeContainer({
 
       {/* Amount Configuration */}
       {selectedCause && currentCause && (
-        <div className="space-y-4 mb-5 p-4 bg-[#F6F7FB] rounded-[10px]">
+        <div ref={amountConfigRef} className="space-y-4 mb-5 p-4 bg-[#F6F7FB] rounded-[10px]">
           {/* Currency Selector */}
           <CurrencySelector value={currency} onChange={handleCurrencyChange} />
 

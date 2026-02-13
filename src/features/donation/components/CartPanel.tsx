@@ -47,7 +47,7 @@ export function CartPanel({
   return (
     <>
       {/* Desktop Version - Sticky Sidebar */}
-      <div className="hidden lg:block bg-white rounded-[12px] border border-[#E5E7EB] p-6 sticky top-6 shadow-[0px_4px_12px_rgba(0,0,0,0.06)]">
+      <div className="hidden lg:block bg-[#F0F1FF] rounded-[12px] border border-[#E5E7EB] p-6 sticky top-6 shadow-[0px_4px_12px_rgba(0,0,0,0.06)]">
         {/* Header */}
         <div className="mb-6">
           <h3 className="text-[#111827] mb-1">Tu donación</h3>
@@ -125,7 +125,7 @@ export function CartPanel({
 
         {/* Trust Indicators */}
         <div className="border-t border-[#ECEEF3] pt-5">
-          <p className="text-xs text-[#9CA3AF] mb-3">Transacción segura</p>
+          <p className="text-xs text-[#9CA3AF] mb-3">Donación segura</p>
           <div className="grid grid-cols-3 gap-3">
             <div className="flex flex-col items-center gap-2 p-3 bg-[#F6F7FB] rounded-[8px]">
               <Lock className="w-5 h-5 text-[#22C55E]" />
@@ -150,7 +150,7 @@ export function CartPanel({
       </div>
 
       {/* Mobile Version - Fixed Bottom Sheet */}
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-[#E5E7EB] shadow-[0px_-4px_12px_rgba(0,0,0,0.08)]">
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-[#F0F1FF] border-t border-[#E5E7EB] shadow-[0px_-4px_12px_rgba(0,0,0,0.08)]">
         {/* Expandable Details */}
         <div
           className={`transition-all duration-300 ease-in-out overflow-hidden ${
@@ -200,7 +200,7 @@ export function CartPanel({
             {/* Trust Indicators Mobile */}
             {items.length > 0 && (
               <div className="border-t border-[#ECEEF3] pt-4">
-                <p className="text-xs text-[#9CA3AF] mb-2">Transacción segura</p>
+                <p className="text-xs text-[#9CA3AF] mb-2">Donación segura</p>
                 <div className="flex gap-2 justify-center">
                   <div className="flex items-center gap-1.5 px-3 py-2 bg-[#F6F7FB] rounded-[8px]">
                     <Lock className="w-4 h-4 text-[#22C55E]" />

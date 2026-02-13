@@ -1,4 +1,4 @@
-export type PaymentMethod = 'CREDIT_CARD' | 'DEBIT_CARD' | 'PSE' | 'NEQUI' | 'DAVIPLATA';
+export type PaymentMethod = 'CREDIT_CARD' | 'DEBIT_CARD' | 'PSE' | 'NEQUI' | 'DAVIPLATA' | 'BANCOLOMBIA_BUTTON';
 export type PersonType = 'NATURAL' | 'JURIDICA';
 export type DocumentType = 'CC' | 'CE' | 'TI' | 'PAS' | 'NIT';
 

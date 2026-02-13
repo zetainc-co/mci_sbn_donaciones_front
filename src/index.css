@@ -1595,6 +1595,46 @@
   animation: .5s ease-in-out shake;
 }
 
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+.overflow-x-auto {
+  overflow-x: auto;
+}
+
+.overflow-x-hidden {
+  overflow-x: hidden;
+}
+
+.whitespace-nowrap {
+  white-space: nowrap;
+}
+
+.min-w-max {
+  min-width: max-content;
+}
+
+.bg-\[\#F0F1FF\] {
+  background-color: #F0F1FF;
+}
+
+@media (width >= 64rem) {
+  .lg\:overflow-x-visible {
+    overflow-x: visible;
+  }
+  .lg\:min-w-0 {
+    min-width: 0;
+  }
+  .lg\:flex-wrap {
+    flex-wrap: wrap;
+  }
+}
+
 @property --tw-translate-x {
   syntax: "*";
   inherits: false;

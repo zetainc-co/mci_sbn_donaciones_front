@@ -15,10 +15,11 @@ interface ConfirmationPanelProps {
   onFinish: () => void;
 }
 
-const paymentMethodNames = {
-  CREDIT_CARD: 'Tarjeta de Crédito',
+const paymentMethodNames: Record<string, string> = {
+  CREDIT_CARD: 'Tarjeta de Crédito/Débito',
   DEBIT_CARD: 'Tarjeta Débito',
   PSE: 'PSE',
+  BANCOLOMBIA_BUTTON: 'Botón Bancolombia',
   NEQUI: 'Nequi',
   DAVIPLATA: 'Daviplata',
 };
@@ -37,23 +38,23 @@ const statusConfig = {
     color: 'text-[#F59E0B]',
     bgColor: 'bg-[#F59E0B]/10',
     title: 'Donación en proceso',
-    description: 'Tu pago está siendo procesado. Te notificaremos cuando se complete.',
+    description: 'Tu donación está siendo procesada. Te notificaremos cuando se complete.',
     label: 'Pendiente',
   },
   PROCESSING: {
     icon: RefreshCw,
     color: 'text-[#3B82F6]',
     bgColor: 'bg-[#3B82F6]/10',
-    title: 'Verificando tu pago',
-    description: 'Estamos confirmando tu pago con la entidad bancaria. Esto puede tomar unos segundos.',
+    title: 'Verificando tu donación',
+    description: 'Estamos confirmando tu donación con la entidad bancaria. Esto puede tomar unos segundos.',
     label: 'Verificando',
   },
   DECLINED: {
     icon: XCircle,
     color: 'text-[#EF4444]',
     bgColor: 'bg-[#EF4444]/10',
-    title: 'Pago no aprobado',
-    description: 'Lo sentimos, tu pago no fue aprobado. Por favor intenta con otro método.',
+    title: 'Donación no aprobada',
+    description: 'Lo sentimos, tu donación no fue aprobada. Por favor intenta con otro método.',
     label: 'Rechazado',
   },
 };
@@ -167,7 +168,7 @@ export function ConfirmationPanel({
             {isChecking ? (
               <div className="flex items-center justify-center gap-2 text-sm text-[#6B7280]">
                 <RefreshCw className="w-4 h-4 animate-spin" />
-                <span>Verificando estado del pago...</span>
+                <span>Verificando estado de la donación...</span>
               </div>
             ) : countdown > 0 ? (
               <>
@@ -206,7 +207,7 @@ export function ConfirmationPanel({
         {/* Transaction Reference */}
         {wompiReference && (
           <div className="mb-6 p-4 bg-[#EEF0FF] rounded-[10px] border border-[#4E5BFF]/20">
-            <p className="text-sm text-[#6B7280] mb-1">Referencia de transacción</p>
+            <p className="text-sm text-[#6B7280] mb-1">Referencia de donación</p>
             <p className="font-mono font-bold text-[#4E5BFF] text-lg">{wompiReference}</p>
             {transactionId && (
               <p className="text-xs text-[#6B7280] mt-1">ID Wompi: {transactionId}</p>
@@ -232,7 +233,7 @@ export function ConfirmationPanel({
 
         {/* Payment Method */}
         <div className="mb-6 p-4 bg-[#F6F7FB] rounded-[10px]">
-          <p className="text-sm text-[#6B7280] mb-1">Método de pago</p>
+          <p className="text-sm text-[#6B7280] mb-1">Método de donación</p>
           <p className="font-medium text-[#111827]">
             {paymentMethodNames[paymentMethod]}
           </p>

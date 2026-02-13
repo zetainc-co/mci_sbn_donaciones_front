@@ -21,6 +21,10 @@ export function AmountInput({
     onChange(input);
   };
 
+  const displayValue = value
+    ? Number(value).toLocaleString('es-CO')
+    : '';
+
   return (
     <div className="w-full">
       <div className="relative">
@@ -29,7 +33,7 @@ export function AmountInput({
         </div>
         <input
           type="text"
-          value={value}
+          value={displayValue}
           onChange={handleChange}
           placeholder={placeholder}
           className={`

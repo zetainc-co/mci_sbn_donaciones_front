@@ -20,14 +20,15 @@ export function CategoryTabs({ activeTab, onTabChange }: CategoryTabsProps) {
   };
 
   return (
-    <div className="flex gap-2 mb-6 flex-wrap">
+    <div className="mb-6 overflow-x-auto lg:overflow-x-visible scrollbar-hide">
+      <div className="flex gap-2 min-w-max lg:min-w-0 lg:flex-wrap">
       {categories.map((category) => (
         <button
           key={category.value}
           onClick={() => handleTabClick(category)}
           disabled={!category.enabled}
           className={`
-            px-5 py-2.5 rounded-[10px] font-medium text-sm transition-all duration-200 relative
+            whitespace-nowrap flex-shrink-0 px-5 py-2.5 rounded-[10px] font-medium text-sm transition-all duration-200 relative
             ${
               activeTab === category.value && category.enabled
                 ? 'bg-[#4E5BFF] text-white shadow-md'
@@ -45,6 +46,7 @@ export function CategoryTabs({ activeTab, onTabChange }: CategoryTabsProps) {
           )}
         </button>
       ))}
+      </div>
     </div>
   );
 }
