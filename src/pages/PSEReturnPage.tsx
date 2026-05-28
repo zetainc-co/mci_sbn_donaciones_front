@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { CheckCircle2, Clock, XCircle, ArrowRight, RefreshCw } from 'lucide-react';
-import { donationsService, type Donation } from '@/shared/lib/api';
+import { donationsService } from '@/shared/lib/api';
+import type { Donation } from '@/shared/lib/api';
 import logoSabanaNorte from '@/shared/assets/db28b6f2afc4257aa2f0341a5d2855a92eaf3105.png';
 
 type PageStatus = 'loading' | 'success' | 'pending' | 'failed' | 'error';
@@ -62,7 +63,7 @@ export function PSEReturnPage() {
       }
 
       try {
-        const donationData = await donationsService.getById(donationId);
+        const donationData = await donationsService.getByIdForCallback(donationId);
         setDonation(donationData);
 
         // Map donation status to page status
