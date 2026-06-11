@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { CheckCircle2, Download, ArrowRight, Clock, XCircle, RefreshCw } from 'lucide-react';
+import { CheckCircle2, Download, ArrowRight, Clock, XCircle, RefreshCw, ExternalLink } from 'lucide-react';
 import { CartItem } from '../types';
 import { DonorInfo } from '@/features/donor/types';
 import { PaymentMethod } from '@/features/payment/types';
@@ -276,6 +276,31 @@ export function ConfirmationPanel({
           </div>
         </div>
       </div>
+
+      {/* Bank redirect button — shown for PSE/Bancolombia while awaiting bank confirmation */}
+      {(donationResult?.type === 'pse' || donationResult?.type === 'bancolombia') &&
+        donationResult?.redirectUrl &&
+        (currentStatus === 'PENDING' || currentStatus === 'PROCESSING') && (
+          <div className="mb-4 p-4 bg-[#EEF0FF] border border-[#4E5BFF]/30 rounded-[12px]">
+            <p className="text-sm text-[#374151] mb-3 text-center">
+              {donationResult.type === 'pse'
+                ? 'Debes completar el pago en tu banco para finalizar la donación.'
+                : 'Debes autorizar el pago en la app de Bancolombia.'}
+            </p>
+            <button
+              onClick={() =>
+                window.open(donationResult.redirectUrl, '_blank', 'noopener,noreferrer')
+              }
+              className="w-full py-3.5 px-4 bg-[#4E5BFF] hover:bg-[#3F46DB] text-white rounded-[10px] font-semibold transition-all duration-200 shadow-md hover:shadow-lg flex items-center justify-center gap-2"
+            >
+              <ExternalLink className="w-5 h-5" />
+              {donationResult.type === 'pse' ? 'Ir al banco' : 'Ir a Bancolombia'}
+            </button>
+            <p className="text-xs text-[#9CA3AF] text-center mt-2">
+              Se abre en una nueva pestaña. Regresa aquí cuando termines.
+            </p>
+          </div>
+        )}
 
       {/* Action Buttons */}
       <div className="flex gap-4">

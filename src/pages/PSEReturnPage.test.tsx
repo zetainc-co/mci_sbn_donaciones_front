@@ -35,6 +35,26 @@
  * --- Scenario 7: New donation button on success ---
  * Given status is 'success' or 'pending'
  * Then "Hacer otra donación" button navigates to '/'
+ *
+ * --- Scenario 8: Polling countdown while pending ---
+ * Given status is 'PENDING' or 'PROCESSING' after initial check
+ * Then countdown UI appears ("Próxima verificación en X segundos")
+ * And after countdown reaches 0, another status check fires
+ *
+ * --- Scenario 9: Polling stops after maxChecks ---
+ * Given checkCount has reached 8 (maxChecks)
+ * Then no further checks are triggered
+ * And countdown UI disappears
+ *
+ * --- Scenario 10: Polling stops when COMPLETED ---
+ * Given status transitions to COMPLETED during polling
+ * Then countdown UI disappears
+ * And "Hacer otra donación" or receipt button appears
+ *
+ * --- Scenario 11: Receipt download button on success ---
+ * Given status = 'success' (COMPLETED)
+ * Then "Descargar comprobante" button is rendered
+ * When clicked, opens /api/donations/{id}/receipt in new tab
  */
 
 export {};

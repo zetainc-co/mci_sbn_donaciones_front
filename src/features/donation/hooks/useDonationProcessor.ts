@@ -125,9 +125,9 @@ export function useDonationProcessor() {
           setResult(processResult);
           setIsProcessing(false);
 
-          // Redirect to bank for PSE
+          // Open bank in new tab so confirmation page stays visible as fallback
           if (paymentResult.redirect_url) {
-            window.location.href = paymentResult.redirect_url;
+            window.open(paymentResult.redirect_url, '_blank', 'noopener,noreferrer');
           }
 
           return processResult;
@@ -145,9 +145,9 @@ export function useDonationProcessor() {
           setResult(processResult);
           setIsProcessing(false);
 
-          // Redirect to Bancolombia app
+          // Open Bancolombia in new tab so confirmation page stays visible as fallback
           if (paymentResult.redirect_url) {
-            window.location.href = paymentResult.redirect_url;
+            window.open(paymentResult.redirect_url, '_blank', 'noopener,noreferrer');
           }
 
           return processResult;
