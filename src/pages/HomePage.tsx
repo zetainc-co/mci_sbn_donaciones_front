@@ -459,7 +459,7 @@ export function HomePage() {
                     ? [
                         { method: 'CREDIT_CARD' },
                         { method: 'BANCOLOMBIA_BUTTON' },
-                        { method: 'PSE', disabled: true, disabledText: 'Próximamente' },
+                        { method: 'PSE' },
                       ]
                     : [{ method: 'CREDIT_CARD' }];
 
